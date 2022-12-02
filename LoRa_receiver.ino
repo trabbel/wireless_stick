@@ -126,5 +126,6 @@ void loop() {
     Heltec.display->clear();
     Heltec.display->drawStringMaxWidth(0, 0, 64, output);
     Heltec.display->display();
+    delete(output);
   }
 }

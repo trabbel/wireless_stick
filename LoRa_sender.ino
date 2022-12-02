@@ -108,6 +108,8 @@ void loop() {
   LoRa.print(message);
   LoRa.endPacket();
   
+  delete(output);
+  delete(message);
   msgCnt++;
   delay(1000);
 }
