@@ -32,6 +32,8 @@ void setup() {
       break;
     case 11779684: nodeId = 2;
       break;
+    case 11779836: nodeId = 3;
+      break;
     default: nodeId = -1;
       break;
   }
