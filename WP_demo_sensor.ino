@@ -1,9 +1,3 @@
-/**
- * A BLE client example that is rich in capabilities.
- * There is a lot new capabilities implemented.
- * author unknown
- * updated by chegewara
- */
 
 #include "BLEDevice.h"
 #include "heltec.h"
@@ -141,18 +135,14 @@ void setup() {
       break;
   }
 
-  // Start heltec display, LoRa and Serial
+  // Start heltec display and Serial
   Heltec.begin(true /*DisplayEnable Enable*/, false /*Heltec.LoRa Enable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, 868E6 /*long frequency*/);
 
   // -----Init Display-----
   Heltec.display->setFont(ArialMT_Plain_10);
   Heltec.display->clear();
-  Heltec.display->drawString(0, 0, "Sending ping:");
+  Heltec.display->drawString(0, 0, "Init");
   Heltec.display->display();
-
-  Serial.println(nodeId);
-
-  //Serial.begin(115200);
   Serial.println("Starting Arduino BLE Client application...");
   BLEDevice::init("");
 
@@ -165,36 +155,38 @@ void setup() {
   pBLEScan->setWindow(449);
   pBLEScan->setActiveScan(true);
   pBLEScan->start(5, false);
-} // End of setup.
+} 
 
 
 // This is the Arduino main loop function.
 void loop() {
 
   // If the flag "doConnect" is true then we have scanned for and found the desired
-  // BLE Server with which we wish to connect.  Now we connect to it.  Once we are 
+  // BLE Server with which we wish to connect.  Now we connect to it.  Once we are
   // connected we set the connected flag to be true.
   if (doConnect == true) {
     if (connectToServer()) {
       Serial.println("We are now connected to the BLE Server.");
     } else {
-      Serial.println("We have failed to connect to the server; there is nothin more we will do.");
+      Serial.println("We have failed to connect to the server; there is nothing more we will do.");
     }
     doConnect = false;
   }
 
-  // If we are connected to a peer BLE Server, update the characteristic each time we are reached
-  // with the current time since boot.
   if (connected) {
     String newValue = String(nodeId);
     Serial.println("Setting new characteristic value to \"" + newValue + "\"");
     
     // Set the characteristic's value to be the array of bytes that is actually a string.
     pRemoteCharacteristic->writeValue(newValue.c_str(), newValue.length());
-    // pRemoteCharacteristic->writeValue(chipId, sizeof(int));
   }else if(doScan){
     BLEDevice::getScan()->start(0);  // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
   }
-  
-  delay(1000); // Delay a second between loops.
-} // End of loop
+  char * output;
+  asprintf(&output, "ID: %d", nodeId);
+  Heltec.display->clear();
+  Heltec.display->drawStringMaxWidth(0, 0, 64, output);
+  Heltec.display->display();
+  delete(output);
+  delay(1000+nodeId*1000);
+}

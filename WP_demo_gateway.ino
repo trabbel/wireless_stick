@@ -1,24 +1,3 @@
-/*
-    Video: https://www.youtube.com/watch?v=oCMOYS71NIU
-    Based on Neil Kolban example for IDF: https://github.com/nkolban/esp32-snippets/blob/master/cpp_utils/tests/BLE%20Tests/SampleNotify.cpp
-    Ported to Arduino ESP32 by Evandro Copercini
-    updated by chegewara
-
-   Create a BLE server that, once we receive a connection, will send periodic notifications.
-   The service advertises itself as: 4fafc201-1fb5-459e-8fcc-c5c9c331914b
-   And has a characteristic of: beb5483e-36e1-4688-b7f5-ea07361b26a8
-
-   The design of creating the BLE server is:
-   1. Create a BLE Server
-   2. Create a BLE Service
-   3. Create a BLE Characteristic on the Service
-   4. Create a BLE Descriptor on the characteristic
-   5. Start the service.
-   6. Start advertising.
-
-   A connect hander associated with the server starts a background task that performs notification
-   every couple of seconds.
-*/
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
@@ -42,6 +21,8 @@ uint32_t chipId = 0;
 int nodeId;
 int counter_0 = 0;
 int counter_1 = 0;
+int cycles = 0;
+int report = 100;
 
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -58,17 +39,15 @@ class MyServerCallbacks: public BLEServerCallbacks {
 class MyCallback: public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic* pCharacteristic){
     std::string value = pCharacteristic->getValue();
-    Serial.print("The characteristic value was: ");
-    Serial.println(value.c_str());
     if(value == "0"){
       counter_0++;
     }else if(value == "1"){
       counter_1++;
     }
-    Serial.print("Counter 0: ");
-    Serial.print(counter_0);
-    Serial.print(", Counter 1: ");
-    Serial.println(counter_1);
+    //Serial.print("Counter 0: ");
+    //Serial.print(counter_0);
+    //Serial.print(", Counter 1: ");
+    //Serial.println(counter_1);
   }
 };
 
@@ -101,10 +80,8 @@ void setup() {
   // -----Init Display-----
   Heltec.display->setFont(ArialMT_Plain_10);
   Heltec.display->clear();
-  Heltec.display->drawString(0, 0, "Sending ping:");
+  Heltec.display->drawString(0, 0, "Init");
   Heltec.display->display();
-  Serial.println(nodeId);
-  Serial.println(chipId);
 
 
 
@@ -157,6 +134,27 @@ void loop() {
         // pCharacteristic->notify();
         // value++;
 //}
+  char * output;
+  asprintf(&output, "Ctr 0: %d Ctr 1: %d", counter_0, counter_1);
+  Heltec.display->clear();
+  Heltec.display->drawStringMaxWidth(0, 0, 50, output);
+  Heltec.display->display();
+  cycles++;
+  delete(output);
+  if(cycles == report){
+    digitalWrite(25, HIGH); 
+  char * message;
+  asprintf(&message, "C0:%d, C1:%d", counter_0, counter_1);
+
+  // -----LoRa send message-----
+  LoRa.beginPacket();
+  LoRa.print(message);
+  LoRa.endPacket();
+  delete(message);
+  Serial.println("Sent");
+  cycles = 0;
+  digitalWrite(25, LOW); 
+  }
         delay(1000); // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
     
     // disconnecting
