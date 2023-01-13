@@ -18,6 +18,9 @@ static BLEAdvertisedDevice* myDevice;
 
 uint32_t chipId = 0;
 int nodeId;
+const int sensor = 39;
+int sensorValue = 0;
+float temperature;
 
 
 static void notifyCallback(
@@ -146,6 +149,9 @@ void setup() {
   Serial.println("Starting Arduino BLE Client application...");
   BLEDevice::init("");
 
+  pinMode(sensor, INPUT);
+  analogReadResolution(10);
+
   // Retrieve a Scanner and set the callback we want to use to be informed when we
   // have detected a new device.  Specify that we want active scanning and start the
   // scan to run for 5 seconds.
@@ -160,7 +166,12 @@ void setup() {
 
 // This is the Arduino main loop function.
 void loop() {
-
+  sensorValue = analogRead(sensor);
+  float voltageOut = (sensorValue * 5000) / 1024;
+  
+  // calculate temperature for LM35 (LM35DZ)
+  temperature = (voltageOut / 10);
+  // Serial.println(temperature);
   // If the flag "doConnect" is true then we have scanned for and found the desired
   // BLE Server with which we wish to connect.  Now we connect to it.  Once we are
   // connected we set the connected flag to be true.
@@ -183,7 +194,7 @@ void loop() {
     BLEDevice::getScan()->start(0);  // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
   }
   char * output;
-  asprintf(&output, "ID: %d", nodeId);
+  asprintf(&output, "ID: %d, Temp: %.2f", nodeId, temperature);
   Heltec.display->clear();
   Heltec.display->drawStringMaxWidth(0, 0, 64, output);
   Heltec.display->display();
