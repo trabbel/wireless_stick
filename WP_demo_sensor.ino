@@ -150,7 +150,7 @@ void setup() {
   BLEDevice::init("");
 
   pinMode(sensor, INPUT);
-  analogReadResolution(10);
+  analogReadResolution(12);
 
   // Retrieve a Scanner and set the callback we want to use to be informed when we
   // have detected a new device.  Specify that we want active scanning and start the
@@ -167,10 +167,10 @@ void setup() {
 // This is the Arduino main loop function.
 void loop() {
   sensorValue = analogRead(sensor);
-  float voltageOut = (sensorValue * 5000) / 1024;
+  float voltageOut = (sensorValue * 3200) / 4095;
   
   // calculate temperature for LM35 (LM35DZ)
-  temperature = (voltageOut / 10);
+  temperature = (voltageOut / 10) - 273;
   // Serial.println(temperature);
   // If the flag "doConnect" is true then we have scanned for and found the desired
   // BLE Server with which we wish to connect.  Now we connect to it.  Once we are
@@ -185,7 +185,7 @@ void loop() {
   }
 
   if (connected) {
-    String newValue = String(nodeId);
+    String newValue = String(nodeId) + " " + String(temperature);
     Serial.println("Setting new characteristic value to \"" + newValue + "\"");
     
     // Set the characteristic's value to be the array of bytes that is actually a string.
