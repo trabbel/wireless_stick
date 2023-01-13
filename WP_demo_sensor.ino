@@ -199,5 +199,5 @@ void loop() {
   Heltec.display->drawStringMaxWidth(0, 0, 64, output);
   Heltec.display->display();
   delete(output);
-  delay(1000+nodeId*1000);
+  delay(1000);
 }
