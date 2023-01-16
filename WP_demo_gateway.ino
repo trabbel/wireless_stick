@@ -25,12 +25,18 @@ int nodeId;
 const int sensor = 39;
 int sensorValue = 0;
 float temperature;
+float averageTemp;
 
 int counter_0 = 0;
 int counter_1 = 0;
 int cycles = 0;
-int report = 100;
+const int report = 10;
 int messageSize;
+
+float data_0[report] = {};
+float data_1[report] = {};
+float data_self[report] = {};
+
 
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
@@ -47,11 +53,19 @@ class MyCallback : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic* pCharacteristic) {
     string message = pCharacteristic->getValue();
     messageSize = message.length();
-    Serial.println(std::atof(message.substr(2, messageSize - 2).c_str()));
+    float temp = std::atof(message.substr(2, messageSize - 2).c_str());
     if (message[0] == '0') {
+      data_0[counter_0] = temp;
       counter_0++;
+      if (counter_0 == report){
+        counter_0 = 0;
+      }
     } else if (message[0] == '1') {
+      data_1[counter_1] = temp;
       counter_1++;
+      if (counter_1 == report){
+        counter_1 = 0;
+      }
     }
     //Serial.print("Counter 0: ");
     //Serial.print(counter_0);
@@ -154,9 +168,19 @@ void loop() {
 
   // calculate temperature for LM35 (LM35DZ)
   temperature = (voltageOut / 10) - 273;
-  // Serial.println(temperature);
+
+  data_self[cycles] = temperature;
+   //Serial.println(temperature);
+   
+  averageTemp = 0;
+  for (int i = 0; i<report;i++){
+    averageTemp += (data_0[i] + data_1[i] + data_self[i]);
+    //Serial.println(data_self[i]);
+  }
+  averageTemp /= (3*report);
+
   char* output;
-  asprintf(&output, "Ctr 0: %d Ctr 1: %d", counter_0, counter_1);
+  asprintf(&output, "%.2f",  averageTemp);
   Heltec.display->clear();
   Heltec.display->drawStringMaxWidth(0, 0, 50, output);
   Heltec.display->display();
@@ -165,7 +189,7 @@ void loop() {
   if (cycles == report) {
     digitalWrite(25, HIGH);
     char* message;
-    asprintf(&message, "C0:%d, C1:%d", counter_0, counter_1);
+    asprintf(&message, "Temp: %.2f", averageTemp);
 
     // -----LoRa send message-----
     LoRa.beginPacket();
