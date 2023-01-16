@@ -21,6 +21,7 @@ int nodeId;
 const int sensor = 39;
 int sensorValue = 0;
 float temperature;
+float correction;
 
 
 static void notifyCallback(
@@ -126,13 +127,13 @@ void setup() {
 	  chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
 	}
   switch(chipId){
-    case 11779112: nodeId = 0;
+    case 11779112: nodeId = 0; correction = 0;
       break;
-    case 11779672: nodeId = 1;
+    case 11779672: nodeId = 1; correction = 0;
       break;
-    case 11779684: nodeId = 2;
+    case 11779684: nodeId = 2; correction = 0;
       break;
-    case 11779836: nodeId = 3;
+    case 11779836: nodeId = 3; correction = 0;
       break;
     default: nodeId = -1;
       break;
@@ -171,6 +172,7 @@ void loop() {
   
   // calculate temperature for LM35 (LM35DZ)
   temperature = (voltageOut / 10) - 273;
+  temperature += correction;
   // Serial.println(temperature);
   // If the flag "doConnect" is true then we have scanned for and found the desired
   // BLE Server with which we wish to connect.  Now we connect to it.  Once we are

@@ -26,6 +26,7 @@ const int sensor = 39;
 int sensorValue = 0;
 float temperature;
 float averageTemp;
+float correction;
 
 int counter_0 = 0;
 int counter_1 = 0;
@@ -86,16 +87,16 @@ void setup() {
   }
   switch (chipId) {
     case 11779112:
-      nodeId = 0;
+      nodeId = 0; correction = 0;
       break;
     case 11779672:
-      nodeId = 1;
+      nodeId = 1; correction = 0;
       break;
     case 11779684:
-      nodeId = 2;
+      nodeId = 2; correction = 0;
       break;
     case 11779836:
-      nodeId = 3;
+      nodeId = 3; correction = 0;
       break;
     default:
       nodeId = -1;
@@ -168,6 +169,7 @@ void loop() {
 
   // calculate temperature for LM35 (LM35DZ)
   temperature = (voltageOut / 10) - 273;
+  temperature += correction;
 
   data_self[cycles] = temperature;
    //Serial.println(temperature);
@@ -189,7 +191,7 @@ void loop() {
   if (cycles == report) {
     digitalWrite(25, HIGH);
     char* message;
-    asprintf(&message, "Temp: %.2f", averageTemp);
+    asprintf(&message, "%.2f", averageTemp);
 
     // -----LoRa send message-----
     LoRa.beginPacket();
