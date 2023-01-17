@@ -151,7 +151,7 @@ void setup() {
   pAdvertising->setScanResponse(false);
   pAdvertising->setMinPreferred(0x0);  // set value to 0x00 to not advertise this parameter
   BLEDevice::startAdvertising();
-  Serial.println("Waiting a client connection to notify...");
+  Serial.println("Waiting for a client connection to notify...");
   pCharacteristic->setValue((uint8_t*)&value, 4);
   pCharacteristic->notify();
 }
@@ -165,7 +165,7 @@ void loop() {
   //}
 
   sensorValue = analogRead(sensor);
-  float voltageOut = (sensorValue * 3200) / 4095;
+  float voltageOut = (sensorValue * 3300) / 4095;
 
   // calculate temperature for LM35 (LM35DZ)
   temperature = (voltageOut / 10) - 273;
@@ -182,7 +182,7 @@ void loop() {
   averageTemp /= (3*report);
 
   char* output;
-  asprintf(&output, "%.2f",  averageTemp);
+  asprintf(&output, "Own:%.2fAve:%.2f",temperature,  averageTemp);
   Heltec.display->clear();
   Heltec.display->drawStringMaxWidth(0, 0, 50, output);
   Heltec.display->display();
@@ -198,7 +198,7 @@ void loop() {
     LoRa.print(message);
     LoRa.endPacket();
     delete (message);
-    Serial.println("Sent");
+    Serial.println("Sending \"" + String(averageTemp) + "\" over LoRa");
     cycles = 0;
     digitalWrite(25, LOW);
   }

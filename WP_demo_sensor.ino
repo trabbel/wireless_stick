@@ -168,7 +168,7 @@ void setup() {
 // This is the Arduino main loop function.
 void loop() {
   sensorValue = analogRead(sensor);
-  float voltageOut = (sensorValue * 3200) / 4095;
+  float voltageOut = (sensorValue * 3300) / 4095;
   
   // calculate temperature for LM35 (LM35DZ)
   temperature = (voltageOut / 10) - 273;
@@ -188,7 +188,7 @@ void loop() {
 
   if (connected) {
     String newValue = String(nodeId) + " " + String(temperature);
-    Serial.println("Setting new characteristic value to \"" + newValue + "\"");
+    Serial.println("Sending \"" + newValue + "\" over BLE");
     
     // Set the characteristic's value to be the array of bytes that is actually a string.
     pRemoteCharacteristic->writeValue(newValue.c_str(), newValue.length());
