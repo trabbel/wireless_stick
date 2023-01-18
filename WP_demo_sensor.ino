@@ -126,16 +126,21 @@ void setup() {
   for(int i=0; i<17; i=i+8) {
 	  chipId |= ((ESP.getEfuseMac() >> (40 - i)) & 0xff) << i;
 	}
-  switch(chipId){
-    case 11779112: nodeId = 0; correction = 0;
+  switch (chipId) {
+    case 11779112:
+      nodeId = 0; correction = -13.0;
       break;
-    case 11779672: nodeId = 1; correction = 0;
+    case 11779672:
+      nodeId = 1; correction = -10.0;
       break;
-    case 11779684: nodeId = 2; correction = 0;
+    case 11779684:
+      nodeId = 2; correction = -15.0;
       break;
-    case 11779836: nodeId = 3; correction = 0;
+    case 11779836:
+      nodeId = 3; correction = 0;
       break;
-    default: nodeId = -1;
+    default:
+      nodeId = -1;
       break;
   }
 
@@ -196,7 +201,7 @@ void loop() {
     BLEDevice::getScan()->start(0);  // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
   }
   char * output;
-  asprintf(&output, "ID: %d, Temp: %.2f", nodeId, temperature);
+  asprintf(&output, "ID: %d, Temp: %.1f", nodeId, temperature);
   Heltec.display->clear();
   Heltec.display->drawStringMaxWidth(0, 0, 64, output);
   Heltec.display->display();

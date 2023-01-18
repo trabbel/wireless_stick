@@ -87,13 +87,13 @@ void setup() {
   }
   switch (chipId) {
     case 11779112:
-      nodeId = 0; correction = 0;
+      nodeId = 0; correction = -13.0;
       break;
     case 11779672:
-      nodeId = 1; correction = 0;
+      nodeId = 1; correction = -10.0;
       break;
     case 11779684:
-      nodeId = 2; correction = 0;
+      nodeId = 2; correction = -15.0;
       break;
     case 11779836:
       nodeId = 3; correction = 0;
