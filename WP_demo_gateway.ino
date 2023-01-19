@@ -50,6 +50,9 @@ class MyServerCallbacks : public BLEServerCallbacks {
   }
 };
 
+// When a sensor node sends a new temperature measurement, save it
+// in the appropriate array at position counter_x. The counter provides
+// a sliding window to always update the oldest measurement.
 class MyCallback : public BLECharacteristicCallbacks {
   void onWrite(BLECharacteristic* pCharacteristic) {
     string message = pCharacteristic->getValue();
@@ -68,11 +71,6 @@ class MyCallback : public BLECharacteristicCallbacks {
         counter_1 = 0;
       }
     }
-    //Serial.print("Counter 0: ");
-    //Serial.print(counter_0);
-    //Serial.print(", Counter 1: ");
-    //Serial.println(counter_1);
-  }
 };
 
 
@@ -106,16 +104,15 @@ void setup() {
   // Start heltec display, LoRa and Serial
   Heltec.begin(true /*DisplayEnable Enable*/, true /*Heltec.LoRa Enable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, 868E6 /*long frequency*/);
 
-  // -----Init Display-----
+  // Init Display
   Heltec.display->setFont(ArialMT_Plain_10);
   Heltec.display->clear();
   Heltec.display->drawString(0, 0, "Init");
   Heltec.display->display();
 
+  // Init sensor pin
   pinMode(sensor, INPUT);
   analogReadResolution(12);
-
-  //Serial.begin(115200);
 
   // Create the BLE Device
   BLEDevice::init("ESP32");
@@ -130,13 +127,9 @@ void setup() {
   // Create a BLE Characteristic
   pCharacteristic = pService->createCharacteristic(
     CHARACTERISTIC_UUID,
-    BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE  //|
-    //BLECharacteristic::PROPERTY_NOTIFY |
-    //BLECharacteristic::PROPERTY_INDICATE |
-    //BLECharacteristic::PROPERTY_BROADCAST
+    BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE
   );
 
-  // https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.descriptor.gatt.client_characteristic_configuration.xml
   // Create a BLE Descriptor
   pCharacteristic->setCallbacks(new MyCallback());
 
@@ -157,12 +150,6 @@ void setup() {
 }
 
 void loop() {
-  // notify changed value
-  //if (deviceConnected) {
-  // pCharacteristic->setValue((uint8_t*)&value, 4);
-  // pCharacteristic->notify();
-  // value++;
-  //}
 
   sensorValue = analogRead(sensor);
   float voltageOut = (sensorValue * 3300) / 4095;
@@ -172,12 +159,10 @@ void loop() {
   temperature += correction;
 
   data_self[cycles] = temperature;
-   //Serial.println(temperature);
    
   averageTemp = 0;
   for (int i = 0; i<report;i++){
     averageTemp += (data_0[i] + data_1[i] + data_self[i]);
-    //Serial.println(data_self[i]);
   }
   averageTemp /= (3*report);
 
@@ -202,7 +187,7 @@ void loop() {
     cycles = 0;
     digitalWrite(25, LOW);
   }
-  delay(1000);  // bluetooth stack will go into congestion, if too many packets are sent, in 6 hours test i was able to go as low as 3ms
+  delay(1000); 
 
   // disconnecting
   if (!deviceConnected && oldDeviceConnected) {

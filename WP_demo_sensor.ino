@@ -1,8 +1,6 @@
-
 #include "BLEDevice.h"
 #include "heltec.h"
 #include <string>
-//#include "BLEScan.h"
 
 // The remote service we wish to connect to.
 static BLEUUID serviceUUID("4fafc201-1fb5-459e-8fcc-c5c9c331914b");
@@ -56,8 +54,8 @@ bool connectToServer() {
 
     pClient->setClientCallbacks(new MyClientCallback());
 
-    // Connect to the remove BLE Server.
-    pClient->connect(myDevice);  // if you pass BLEAdvertisedDevice instead of address, it will be recognized type of peer device address (public or private)
+    // Connect to the remote BLE Server.
+    pClient->connect(myDevice);
     Serial.println(" - Connected to server");
 
     // Obtain a reference to the service we are after in the remote BLE server.
@@ -81,41 +79,29 @@ bool connectToServer() {
     }
     Serial.println(" - Found our characteristic");
 
-    // Read the value of the characteristic.
-    if(pRemoteCharacteristic->canRead()) {
-      std::string value = pRemoteCharacteristic->readValue();
-      Serial.print("The characteristic value was: ");
-      Serial.println(value.c_str());
-    }
-
     if(pRemoteCharacteristic->canNotify())
       pRemoteCharacteristic->registerForNotify(notifyCallback);
 
     connected = true;
     return true;
 }
-/**
- * Scan for BLE servers and find the first one that advertises the service we are looking for.
- */
+
+// Scan for BLE servers and find the first one that advertises the service we are looking for. 
 class MyAdvertisedDeviceCallbacks: public BLEAdvertisedDeviceCallbacks {
- /**
-   * Called for each advertising BLE server.
-   */
+  // For each device
   void onResult(BLEAdvertisedDevice advertisedDevice) {
     Serial.print("BLE Advertised Device found: ");
     Serial.println(advertisedDevice.toString().c_str());
 
-    // We have found a device, let us now see if it contains the service we are looking for.
+    // Check device for desired service
     if (advertisedDevice.haveServiceUUID() && advertisedDevice.isAdvertisingService(serviceUUID)) {
-
       BLEDevice::getScan()->stop();
       myDevice = new BLEAdvertisedDevice(advertisedDevice);
       doConnect = true;
       doScan = true;
-
-    } // Found our server
-  } // onResult
-}; // MyAdvertisedDeviceCallbacks
+    }
+  }
+};
 
 
 void setup() {
@@ -147,7 +133,7 @@ void setup() {
   // Start heltec display and Serial
   Heltec.begin(true /*DisplayEnable Enable*/, false /*Heltec.LoRa Enable*/, true /*Serial Enable*/, true /*PABOOST Enable*/, 868E6 /*long frequency*/);
 
-  // -----Init Display-----
+  // Init Display
   Heltec.display->setFont(ArialMT_Plain_10);
   Heltec.display->clear();
   Heltec.display->drawString(0, 0, "Init");
@@ -170,7 +156,6 @@ void setup() {
 } 
 
 
-// This is the Arduino main loop function.
 void loop() {
   sensorValue = analogRead(sensor);
   float voltageOut = (sensorValue * 3300) / 4095;
@@ -178,10 +163,7 @@ void loop() {
   // calculate temperature for LM35 (LM35DZ)
   temperature = (voltageOut / 10) - 273;
   temperature += correction;
-  // Serial.println(temperature);
-  // If the flag "doConnect" is true then we have scanned for and found the desired
-  // BLE Server with which we wish to connect.  Now we connect to it.  Once we are
-  // connected we set the connected flag to be true.
+
   if (doConnect == true) {
     if (connectToServer()) {
       Serial.println("We are now connected to the BLE Server.");
@@ -198,8 +180,10 @@ void loop() {
     // Set the characteristic's value to be the array of bytes that is actually a string.
     pRemoteCharacteristic->writeValue(newValue.c_str(), newValue.length());
   }else if(doScan){
-    BLEDevice::getScan()->start(0);  // this is just example to start scan after disconnect, most likely there is better way to do it in arduino
+    BLEDevice::getScan()->start(0); 
   }
+
+  // Display measurement 
   char * output;
   asprintf(&output, "ID: %d, Temp: %.1f", nodeId, temperature);
   Heltec.display->clear();
