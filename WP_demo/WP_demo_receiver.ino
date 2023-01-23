@@ -68,6 +68,7 @@ void setup() {
 void loop() {
   // LoRa receive messages
   int packetSize = LoRa.parsePacket();
+  yield();
   // Check for transmission
   if (packetSize) {
     // Activate LED to signal packet reception
